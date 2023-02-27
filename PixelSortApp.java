@@ -132,18 +132,6 @@ public class PixelSortApp extends Application {
         PixelReader pixelReader = img.getPixelReader();
         PixelWriter pixelWriter = editableImg.getPixelWriter();
 
-        /*//set up 2D array
-        Color[][] storedPixel = new Color[imgWIDTH][imgHEIGHT];
-
-        //store all pixel's color data in a 2D array
-        for(int j = 0; j < imgHEIGHT; j++){
-            for (int i = 0; i < imgWIDTH; i++) {
-
-                storedPixel[i][j] = pixelReader.getColor(i, j);
-
-            }
-        }*/
-
         //arrayList to store pixels and sort them
         ArrayList<Color> pixelList = new ArrayList<>();
 
@@ -168,75 +156,6 @@ public class PixelSortApp extends Application {
             }
 
         }
-
-        /*ArrayList<Color> pixelList = new ArrayList<>();
-
-        int start_x = -1;
-        int start_y = -1;
-
-        for (int y = 0; y < imgHEIGHT; y++) {
-
-            for (int x = 0; x < imgWIDTH; x++) {
-
-                Color pixelColor = pixelReader.getColor(x,y);
-
-                if(pixelColor != Color.BLACK){
-
-                    if(start_x == -1 && start_y == -1){
-
-                        start_x = x;
-                        start_y = y;
-
-                    }
-
-                    pixelList.add(pixelColor);
-
-                } else if(!pixelList.isEmpty()) {
-
-                    pixelList.sort(Comparator.comparingDouble(Color::getBrightness));
-
-                    for(int w = 0; w < pixelList.size(); w++){
-
-                        pixelWriter.setColor(start_x,start_y,pixelList.get(w));
-
-                        start_x++;
-
-                    }
-
-                    // Check if there are any pixels remaining in the pixelList
-                    if(start_x < imgWIDTH - 1){
-                        for(int w = 0; w < pixelList.size(); w++){
-                            pixelWriter.setColor(start_x,start_y,pixelList.get(w));
-                            start_x++;
-                        }
-                    }
-
-                    pixelList.clear();
-
-                    start_x = -1;
-                    start_y = -1;
-
-                } else {
-                    // Set the color of the pixel writer to black
-                    pixelWriter.setColor(x, y, Color.BLACK);
-                }
-
-            }
-        }*/
-
-        /*//checks if a pixel in the editable image object has no color, if yes, then sets that pixel to black
-        for (int y = 0; y < imgHEIGHT; y++) {
-
-            for (int x = 0; x < imgWIDTH; x++) {
-
-                if(editableImg.getPixelReader().getColor(x,y) == null){
-
-                    editableImg.getPixelWriter().setColor(x, y, Color.BLACK);
-
-                }
-
-            }
-        }*/
 
         Image finalEditedImg = SwingFXUtils.toFXImage(SwingFXUtils.fromFXImage(editableImg, null), null);
         newView.setImage(finalEditedImg);
