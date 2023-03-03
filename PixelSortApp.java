@@ -23,6 +23,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 public class PixelSortApp extends Application {
 
@@ -62,7 +63,8 @@ public class PixelSortApp extends Application {
         Menu menu = new Menu("File");
         MenuItem fileItem1 = new MenuItem( "Open Image" );
         menu.getItems().add(fileItem1);
-        fileItem1.setOnAction(imgloadEventListener);
+        fileItem1.setOnAction(imgLoadEventListener);
+
         MenuItem fileItem2 = new MenuItem( "Save Image" );
         menu.getItems().add(fileItem2);
         fileItem2.setOnAction(imgSaveEventListener);
@@ -79,13 +81,18 @@ public class PixelSortApp extends Application {
 
         //Edit options
         Menu editMenu = new Menu( "Edit" );
-        MenuItem editItem1 = new MenuItem( "Sort" );
-        editMenu.getItems().add(editItem1);
-        editItem1.setOnAction(imgEditEventListener);
 
-        MenuItem editItem2 = new MenuItem( "invert" );
+        MenuItem editItem1 = new MenuItem( "Invert" );
+        editMenu.getItems().add(editItem1);
+        editItem1.setOnAction(imgInvertEventListener);
+
+        MenuItem editItem2 = new MenuItem( "Brightness Sort" );
         editMenu.getItems().add(editItem2);
-        editItem2.setOnAction(imgEditEventListener2);
+        editItem2.setOnAction(imgBrightSortEventListener);
+
+        MenuItem editItem3 = new MenuItem( "Random Sort" );
+        editMenu.getItems().add(editItem3);
+        editItem3.setOnAction(imgRandomSortEventListener);
 
         bar.getMenus().add(editMenu);
 
@@ -122,7 +129,7 @@ public class PixelSortApp extends Application {
     }
 
     //sort
-    public void editImg(Image img, ImageView newView){
+    public void editBrightSortImg(Image img, ImageView newView){
 
         int imgWIDTH = (int)img.getWidth();
         int imgHEIGHT = (int)img.getHeight();
@@ -145,11 +152,13 @@ public class PixelSortApp extends Application {
 
             if(pixelList.size() == imgWIDTH) {
 
-                pixelList.sort(Comparator.comparingDouble(Color::getBrightness)); //sorting the list which has a row of pixels
+                //pixelList.sort(Comparator.comparingDouble(Color::getBrightness)); //sorting the list which has a row of pixels
 
-                for (int n = 0; n < pixelList.size(); n++) {
+                ArrayList<Color> newRandomSortedList = brightSort(pixelList);
 
-                    pixelWriter.setColor(n, j, pixelList.get(n));
+                for (int n = 0; n < newRandomSortedList.size(); n++) {
+
+                    pixelWriter.setColor(n, j, newRandomSortedList.get(n));
 
                 }
                 pixelList.clear(); //clear the row of pixels from the list so it can add and sort the next row
@@ -161,9 +170,195 @@ public class PixelSortApp extends Application {
         newView.setImage(finalEditedImg);
     }
 
+    public ArrayList<Color> brightSort(ArrayList<Color> rawPixelList){
+
+        ArrayList<Color> sortedPixelList = new ArrayList<>(); // Creates a new array list that will be filled and returned
+
+        ArrayList<Color> nonBlackPixels = new ArrayList<>(); // arraylist that will hold the pixels that will get sorted
+
+
+        for (int i = 0; i < rawPixelList.size(); i++){ // loops through the given pixel list
+
+            //Color currPixel = rawPixelList.get(i);
+
+            Double currPixelBrightVal = rawPixelList.get(i).getBrightness();
+
+            System.out.println(currPixelBrightVal);
+
+            //for(int m = 0; m < rawPixelList.size(); m++) {
+
+                if (currPixelBrightVal >= 0.1) {
+
+
+                    nonBlackPixels.add(rawPixelList.get(i));// adds the bright pixel to the nonBlack arraylist which keep accumulating until loop encounters a black pixel
+
+
+                } else {
+
+                    nonBlackPixels.sort(Comparator.comparingDouble(Color::getBrightness));//sorts
+
+                    sortedPixelList.addAll(nonBlackPixels);//adds sorted pixel to the returning arraylist
+
+                    nonBlackPixels.clear();
+
+                    sortedPixelList.add(rawPixelList.get(i)); // adds the low brightness pixel
+
+                }
+
+        }
+
+        nonBlackPixels.sort(Comparator.comparingDouble(Color::getBrightness));//sorts
+
+        sortedPixelList.addAll(nonBlackPixels);//adds sorted pixel to the returning arraylist
+
+        nonBlackPixels.clear();
+
+        return sortedPixelList;
+    }
+
+    //same method as editBrightSort expect it calls randomDivideSort method
+    public void editRandomSortImg(Image img, ImageView newView){
+
+        int imgWIDTH = (int)img.getWidth();
+        int imgHEIGHT = (int)img.getHeight();
+
+        WritableImage editableImg = new WritableImage(imgWIDTH, imgHEIGHT);
+        PixelReader pixelReader = img.getPixelReader();
+        PixelWriter pixelWriter = editableImg.getPixelWriter();
+
+        //arrayList to store pixels and sort them
+        ArrayList<Color> pixelList = new ArrayList<>();
+
+        //sort pixels
+        for(int j = 0; j < imgHEIGHT; j++){
+            for (int i = 0; i < imgWIDTH; i++) {
+
+                pixelList.add(pixelReader.getColor(i, j));//adding a row of pixels into pixel list
+
+            }
+
+            if(pixelList.size() == imgWIDTH) {
+
+                ArrayList<Color> newRandomSortedList = randomDivideSort(pixelList);
+
+                for (int n = 0; n < newRandomSortedList.size(); n++) {
+
+                    pixelWriter.setColor(n, j, newRandomSortedList.get(n));
+
+                }
+                pixelList.clear(); //clear the row of pixels from the list so it can add and sort the next row
+            }
+
+        }
+
+        Image finalEditedImg = SwingFXUtils.toFXImage(SwingFXUtils.fromFXImage(editableImg, null), null);
+        newView.setImage(finalEditedImg);
+    }
+
+    public ArrayList<Color> randomDivideSort(ArrayList<Color> rawPixelList){
+
+        //System.out.println(rawPixelList.size());
+
+        ArrayList<Color> randomPixelList = new ArrayList<>();
+
+
+        int divideUpList = (int)(Math.random() * 60 - 17) + 17;
+
+        //System.out.println(divideUpList);
+
+        int dividedPixelCount = rawPixelList.size()/divideUpList;
+
+        System.out.println(dividedPixelCount);
+
+        int leftOverPixels = rawPixelList.size() % dividedPixelCount; //calculates how many pixels are left to iterate through
+
+        //System.out.println(leftOverPixels);
+
+        for(int i = 0; i < rawPixelList.size(); ) {//starts looping through the entire ArrayList and increases i by the random generated number on each increment
+
+            if (leftOverPixels != 0) {
+
+                if (i == (rawPixelList.size() - leftOverPixels)) { //checks if current value of i+(givenlistsize / random number) is greater than the list size. if yes, that means the left over pixel will not be able to be subListed and sorted and added back together.
+
+
+                    for (int p = i; p < rawPixelList.size(); p++) {//since current value of i+(givenlistsize / random number) is smaller than the list size, So this loop adds the rest of the pixels back to the random pixel list
+
+                        randomPixelList.add(rawPixelList.get(p));//this only happens after all the sub divided lists get added so it does need sorting and can be added as they are.(I HOPE)
+
+                    }
+
+                    i = i + dividedPixelCount; //increments i so that i becomes bigger than then the rawList size and the loop can stop.
+
+                } else {// What happens when i+(givenlistsize / random number) is smaller than given list size, which means this happens when list can be properly sub divided and sorted and added back together.
+
+                    int partitionEnd = i + dividedPixelCount;
+
+
+                    List<Color> subPixelList = rawPixelList.subList(i, partitionEnd);//initializes List object which contains the sublist from i to i+dividedPixelCount
+
+                    subPixelList.sort(Comparator.comparingDouble(Color::getBrightness));//sorts
+
+                    randomPixelList.addAll(subPixelList);//adds whatever sorted pixels are in the sublist and adds that to the main ArrayList
+
+                    i = i + dividedPixelCount;//increments the loop forward by portion of the divide
+
+                }
+
+            } else {
+
+                int partitionEnd = i + dividedPixelCount;
+
+                List<Color> subPixelList = rawPixelList.subList(i, partitionEnd);//initializes List object which contains the sublist from i to i+dividedPixelCount
+
+                subPixelList.sort(Comparator.comparingDouble(Color::getBrightness));//sorts
+
+                randomPixelList.addAll(subPixelList);//adds whatever sorted pixels are in the sublist and adds that to the main ArrayList
+
+                i = i + dividedPixelCount;//increments the loop forward by portion of the divide
+
+            }
+        }
+
+        //randomPixelList = shiftPixelList(randomPixelList);//offset method
+
+        return randomPixelList;
+    }
+
+    /*//method to offset the pixel list
+    public ArrayList<Color> shiftPixelList(ArrayList<Color> unShiftedList){
+
+        ArrayList<Color> shiftedList = new ArrayList<>();
+
+        int frst = unShiftedList.size()/7;
+        int scnd = unShiftedList.size()/12;
+        int thrd = unShiftedList.size()/15;
+        int frth = unShiftedList.size()/22;
+        int ffth = unShiftedList.size()/27;
+
+        int[] shiftBy = new int [5];
+
+        shiftBy[0] = frst;
+        shiftBy[1] = scnd;
+        shiftBy[2] = thrd;
+        shiftBy[3] = frth;
+        shiftBy[4] = ffth;
+
+        int randPick = (int) (Math.random() * 4 - 0);
+
+        List<Color> subShiftPixelList1 = unShiftedList.subList(shiftBy[randPick], unShiftedList.size());
+
+        shiftedList.addAll(subShiftPixelList1);
+
+        List<Color> subShiftPixelList2 = unShiftedList.subList(0,shiftBy[randPick]);
+
+        shiftedList.addAll(subShiftPixelList2);
+
+        return shiftedList;
+    }*/
+
     //event handling methods
 
-    EventHandler<ActionEvent> imgloadEventListener = e -> {
+    EventHandler<ActionEvent> imgLoadEventListener = e -> {
 
         FileChooser fileChooser = new FileChooser();
         File openedFile = fileChooser.showOpenDialog(null);
@@ -174,19 +369,7 @@ public class PixelSortApp extends Application {
 
     };
 
-    EventHandler<ActionEvent> imgEditEventListener = f -> {
-
-            editImg(view.getImage(), view);
-
-    };
-
-    EventHandler<ActionEvent> imgEditEventListener2 = g -> {
-
-        invertImg(view.getImage(), view);
-
-    };
-
-    EventHandler<ActionEvent> imgSaveEventListener = h -> {
+    EventHandler<ActionEvent> imgSaveEventListener = f -> {
 
         Image saveImg = view.getImage();
 
@@ -231,6 +414,25 @@ public class PixelSortApp extends Application {
         } else {
             System.out.println("No file selected.");
         }
+
+    };
+
+
+    EventHandler<ActionEvent> imgInvertEventListener = g -> {
+
+        invertImg(view.getImage(), view);
+
+    };
+
+    EventHandler<ActionEvent> imgBrightSortEventListener = h -> {
+
+        editBrightSortImg(view.getImage(), view);
+
+    };
+
+    EventHandler<ActionEvent> imgRandomSortEventListener = i -> {
+
+        editRandomSortImg(view.getImage(), view);
 
     };
 
