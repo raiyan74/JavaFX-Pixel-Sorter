@@ -7,4 +7,5 @@ In order to run the code, here is what you need to do:
 - Use any IDE to make a Java project.
 - Add javaFX library to your project.
 - Add PixelSortApp.java and RunApp.java from the repository to your project as seperate classes.
+- Edit the package name according to your project.
 - Run the project from RunApp class's main method.
