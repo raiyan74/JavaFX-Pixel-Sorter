@@ -1,11 +1,14 @@
-# JavaFX-Pixel-Sorter version 0.3
+# JavaFX-Pixel-Sorter version 0.4
+
 A simple photo editor written with JavaFX that can apply a pixel sorting algorithm on a given image file and also able to save the altered image.
 
-In order to run the code, here is what you need to do:
+Changes:
+~added a input field to pass in threshold for sorting algorithms.
+~added a restore image option so user can get back to the original image and apply new sort.
 
-- Install Java SDK 17(or up) and JavaFX SDK(openjfx.io) on your system.
-- Use any IDE to make a Java project.
-- Add javaFX library to your project.
-- Add PixelSortApp.java and RunApp.java from the repository to your project as seperate classes.
-- Edit the package name according to your project.
-- Run the project from RunApp class's main method.
+In order to run the Pixel Sorter Application:
+- Download the "Pixel Sorter v04s.zip";
+- Extract the .zip file;
+- If you don't have Java JDK installed on your windows, download a Java JDK and install it.
+- Java Runtime Environment is bundled with the .exe file, so you don't need to have that on your windows, 
+but if get any error trying to run the .exe maybe try installing a JRE aswell. [JRE version MUST BE above 1.7]
