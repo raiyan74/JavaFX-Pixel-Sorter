@@ -27,7 +27,9 @@ import java.util.List;
 
 public class PixelSortApp extends Application {
 
+    private Image openImg;
     private ImageView view;
+    public Double thresh;
 
     @Override
     public void start(Stage stage) throws Exception{
@@ -69,6 +71,10 @@ public class PixelSortApp extends Application {
         menu.getItems().add(fileItem2);
         fileItem2.setOnAction(imgSaveEventListener);
 
+        MenuItem fileItem3 = new MenuItem( "Restore Original Image" );
+        menu.getItems().add(fileItem3);
+        fileItem3.setOnAction(imgRestoreEventListener);
+
         bar.getMenus().add(menu);
 
         //loaded image details
@@ -86,13 +92,21 @@ public class PixelSortApp extends Application {
         editMenu.getItems().add(editItem1);
         editItem1.setOnAction(imgInvertEventListener);
 
-        MenuItem editItem2 = new MenuItem( "Brightness Sort" );
+        MenuItem editItem2 = new MenuItem( "Random Sort" );
         editMenu.getItems().add(editItem2);
-        editItem2.setOnAction(imgBrightSortEventListener);
+        editItem2.setOnAction(imgRandomSortEventListener);
 
-        MenuItem editItem3 = new MenuItem( "Random Sort" );
+        MenuItem editItem3 = new MenuItem( "Brightness Sort" );
         editMenu.getItems().add(editItem3);
-        editItem3.setOnAction(imgRandomSortEventListener);
+        editItem3.setOnAction(imgBrightSortEventListener);
+
+        MenuItem editItem4 = new MenuItem( "Saturation Sort" );
+        editMenu.getItems().add(editItem4);
+        editItem4.setOnAction(imgSaturationSortEventListener);
+
+        MenuItem editItem5 = new MenuItem( "Hue Sort" );
+        editMenu.getItems().add(editItem5);
+        editItem5.setOnAction(imgHueSortEventListener);
 
         bar.getMenus().add(editMenu);
 
@@ -129,7 +143,7 @@ public class PixelSortApp extends Application {
     }
 
     //sort
-    public void editBrightSortImg(Image img, ImageView newView){
+    public void editSortImg(Image img, ImageView newView, int mode){
 
         int imgWIDTH = (int)img.getWidth();
         int imgHEIGHT = (int)img.getHeight();
@@ -138,6 +152,22 @@ public class PixelSortApp extends Application {
         WritableImage editableImg = new WritableImage(imgWIDTH, imgHEIGHT);
         PixelReader pixelReader = img.getPixelReader();
         PixelWriter pixelWriter = editableImg.getPixelWriter();
+
+        /*//set up 2D array
+        Color[][] storedPixel = new Color[imgWIDTH][imgHEIGHT];
+
+        //store all pixel's color data in a 2D array
+        for(int j = 0; j < imgHEIGHT; j++){
+            for (int i = 0; i < imgWIDTH; i++) {
+
+                storedPixel[i][j] = pixelReader.getColor(i, j);
+
+            }
+        }*/
+
+        if(mode == 2 || mode == 3 || mode == 4){
+            thresh = InputBox.ThresholdInput();
+        }
 
         //arrayList to store pixels and sort them
         ArrayList<Color> pixelList = new ArrayList<>();
@@ -152,9 +182,28 @@ public class PixelSortApp extends Application {
 
             if(pixelList.size() == imgWIDTH) {
 
+                ArrayList<Color> newRandomSortedList = new ArrayList<>();
+
+                if(mode == 1){
+
+                    newRandomSortedList = randomDivideSort(pixelList);
+
+                } else if( mode == 2) {
+
+                    newRandomSortedList = brightSort(pixelList, thresh);
+
+                } else if( mode == 3) {
+
+                    newRandomSortedList = saturationSort(pixelList, thresh);
+
+                } else if( mode == 4) {
+
+                    newRandomSortedList = hueSort(pixelList, thresh);
+
+                }
+
                 //pixelList.sort(Comparator.comparingDouble(Color::getBrightness)); //sorting the list which has a row of pixels
 
-                ArrayList<Color> newRandomSortedList = brightSort(pixelList);
 
                 for (int n = 0; n < newRandomSortedList.size(); n++) {
 
@@ -166,28 +215,99 @@ public class PixelSortApp extends Application {
 
         }
 
+        /*ArrayList<Color> pixelList = new ArrayList<>();
+
+        int start_x = -1;
+        int start_y = -1;
+
+        for (int y = 0; y < imgHEIGHT; y++) {
+
+            for (int x = 0; x < imgWIDTH; x++) {
+
+                Color pixelColor = pixelReader.getColor(x,y);
+
+                if(pixelColor != Color.BLACK){
+
+                    if(start_x == -1 && start_y == -1){
+
+                        start_x = x;
+                        start_y = y;
+
+                    }
+
+                    pixelList.add(pixelColor);
+
+                } else if(!pixelList.isEmpty()) {
+
+                    pixelList.sort(Comparator.comparingDouble(Color::getBrightness));
+
+                    for(int w = 0; w < pixelList.size(); w++){
+
+                        pixelWriter.setColor(start_x,start_y,pixelList.get(w));
+
+                        start_x++;
+
+                    }
+
+                    // Check if there are any pixels remaining in the pixelList
+                    if(start_x < imgWIDTH - 1){
+                        for(int w = 0; w < pixelList.size(); w++){
+                            pixelWriter.setColor(start_x,start_y,pixelList.get(w));
+                            start_x++;
+                        }
+                    }
+
+                    pixelList.clear();
+
+                    start_x = -1;
+                    start_y = -1;
+
+                } else {
+                    // Set the color of the pixel writer to black
+                    pixelWriter.setColor(x, y, Color.BLACK);
+                }
+
+            }
+        }*/
+
+        /*//checks if a pixel in the editable image object has no color, if yes, then sets that pixel to black
+        for (int y = 0; y < imgHEIGHT; y++) {
+
+            for (int x = 0; x < imgWIDTH; x++) {
+
+                if(editableImg.getPixelReader().getColor(x,y) == null){
+
+                    editableImg.getPixelWriter().setColor(x, y, Color.BLACK);
+
+                }
+
+            }
+        }*/
+
         Image finalEditedImg = SwingFXUtils.toFXImage(SwingFXUtils.fromFXImage(editableImg, null), null);
         newView.setImage(finalEditedImg);
     }
 
-    public ArrayList<Color> brightSort(ArrayList<Color> rawPixelList){
+    public ArrayList<Color> brightSort(ArrayList<Color> rawPixelList, Double thresh){
 
         ArrayList<Color> sortedPixelList = new ArrayList<>(); // Creates a new array list that will be filled and returned
 
         ArrayList<Color> nonBlackPixels = new ArrayList<>(); // arraylist that will hold the pixels that will get sorted
+
+        //double threshold = thresh;
 
 
         for (int i = 0; i < rawPixelList.size(); i++){ // loops through the given pixel list
 
             //Color currPixel = rawPixelList.get(i);
 
-            Double currPixelBrightVal = rawPixelList.get(i).getBrightness();
+            double currPixelBrightVal = rawPixelList.get(i).getBrightness();
 
-            System.out.println(currPixelBrightVal);
+            //System.out.println(currPixelBrightVal);
 
             //for(int m = 0; m < rawPixelList.size(); m++) {
 
-                if (currPixelBrightVal >= 0.1) {
+                if (currPixelBrightVal >= thresh) {
 
 
                     nonBlackPixels.add(rawPixelList.get(i));// adds the bright pixel to the nonBlack arraylist which keep accumulating until loop encounters a black pixel
@@ -216,43 +336,101 @@ public class PixelSortApp extends Application {
         return sortedPixelList;
     }
 
-    //same method as editBrightSort expect it calls randomDivideSort method
-    public void editRandomSortImg(Image img, ImageView newView){
+    public ArrayList<Color> saturationSort(ArrayList<Color> rawPixelList, Double thresh){
 
-        int imgWIDTH = (int)img.getWidth();
-        int imgHEIGHT = (int)img.getHeight();
+        ArrayList<Color> sortedPixelList = new ArrayList<>(); // Creates a new array list that will be filled and returned
 
-        WritableImage editableImg = new WritableImage(imgWIDTH, imgHEIGHT);
-        PixelReader pixelReader = img.getPixelReader();
-        PixelWriter pixelWriter = editableImg.getPixelWriter();
+        ArrayList<Color> nonSaturatedPixels = new ArrayList<>(); // arraylist that will hold the pixels that will get sorted
 
-        //arrayList to store pixels and sort them
-        ArrayList<Color> pixelList = new ArrayList<>();
+        //double threshold = thresh;
 
-        //sort pixels
-        for(int j = 0; j < imgHEIGHT; j++){
-            for (int i = 0; i < imgWIDTH; i++) {
 
-                pixelList.add(pixelReader.getColor(i, j));//adding a row of pixels into pixel list
+        for (int i = 0; i < rawPixelList.size(); i++){ // loops through the given pixel list
 
-            }
+            //Color currPixel = rawPixelList.get(i);
 
-            if(pixelList.size() == imgWIDTH) {
+            double currPixelBrightVal = rawPixelList.get(i).getSaturation();
 
-                ArrayList<Color> newRandomSortedList = randomDivideSort(pixelList);
+            //System.out.println(currPixelBrightVal);
 
-                for (int n = 0; n < newRandomSortedList.size(); n++) {
+            //for(int m = 0; m < rawPixelList.size(); m++) {
 
-                    pixelWriter.setColor(n, j, newRandomSortedList.get(n));
+            if (currPixelBrightVal >= thresh) {
 
-                }
-                pixelList.clear(); //clear the row of pixels from the list so it can add and sort the next row
+
+                nonSaturatedPixels.add(rawPixelList.get(i));// adds the bright pixel to the nonBlack arraylist which keep accumulating until loop encounters a black pixel
+
+
+            } else {
+
+                nonSaturatedPixels.sort(Comparator.comparingDouble(Color::getSaturation));//sorts
+
+                sortedPixelList.addAll(nonSaturatedPixels);//adds sorted pixel to the returning arraylist
+
+                nonSaturatedPixels.clear();
+
+                sortedPixelList.add(rawPixelList.get(i)); // adds the low brightness pixel
+
             }
 
         }
 
-        Image finalEditedImg = SwingFXUtils.toFXImage(SwingFXUtils.fromFXImage(editableImg, null), null);
-        newView.setImage(finalEditedImg);
+        nonSaturatedPixels.sort(Comparator.comparingDouble(Color::getSaturation));//sorts
+
+        sortedPixelList.addAll(nonSaturatedPixels);//adds sorted pixel to the returning arraylist
+
+        nonSaturatedPixels.clear();
+
+        return sortedPixelList;
+    }
+
+    //sorts by hue threshold
+    public ArrayList<Color> hueSort(ArrayList<Color> rawPixelList, Double thresh){
+
+        ArrayList<Color> sortedPixelList = new ArrayList<>(); // Creates a new array list that will be filled and returned
+
+        ArrayList<Color> nonHuedPixels = new ArrayList<>(); // arraylist that will hold the pixels that will get sorted
+
+        //double threshold = thresh;
+
+
+        for (int i = 0; i < rawPixelList.size(); i++){ // loops through the given pixel list
+
+            //Color currPixel = rawPixelList.get(i);
+
+            double currPixelBrightVal = rawPixelList.get(i).getHue();
+
+            //System.out.println(currPixelBrightVal);
+
+            //for(int m = 0; m < rawPixelList.size(); m++) {
+
+            if (currPixelBrightVal >= thresh) {
+
+
+                nonHuedPixels.add(rawPixelList.get(i));// adds the bright pixel to the nonBlack arraylist which keep accumulating until loop encounters a black pixel
+
+
+            } else {
+
+                nonHuedPixels.sort(Comparator.comparingDouble(Color::getHue));//sorts
+
+                sortedPixelList.addAll(nonHuedPixels);//adds sorted pixel to the returning arraylist
+
+                nonHuedPixels.clear();
+
+                sortedPixelList.add(rawPixelList.get(i)); // adds the low brightness pixel
+
+            }
+
+        }
+
+        nonHuedPixels.sort(Comparator.comparingDouble(Color::getHue));//sorts
+
+        sortedPixelList.addAll(nonHuedPixels);//adds sorted pixel to the returning arraylist
+
+        nonHuedPixels.clear();
+
+        return sortedPixelList;
     }
 
     public ArrayList<Color> randomDivideSort(ArrayList<Color> rawPixelList){
@@ -363,7 +541,7 @@ public class PixelSortApp extends Application {
         FileChooser fileChooser = new FileChooser();
         File openedFile = fileChooser.showOpenDialog(null);
 
-        Image openImg = new Image(openedFile.toURI().toString());
+        openImg = new Image(openedFile.toURI().toString());
 
         view.setImage(openImg);
 
@@ -417,22 +595,47 @@ public class PixelSortApp extends Application {
 
     };
 
+    EventHandler<ActionEvent> imgRestoreEventListener = g -> {
 
-    EventHandler<ActionEvent> imgInvertEventListener = g -> {
+        view.setImage(openImg);
+
+    };
+
+    EventHandler<ActionEvent> imgInvertEventListener = h -> {
 
         invertImg(view.getImage(), view);
 
     };
 
-    EventHandler<ActionEvent> imgBrightSortEventListener = h -> {
+    EventHandler<ActionEvent> imgRandomSortEventListener = i -> {
 
-        editBrightSortImg(view.getImage(), view);
+        int mode = 1;
+
+        editSortImg(view.getImage(), view, mode);
 
     };
 
-    EventHandler<ActionEvent> imgRandomSortEventListener = i -> {
+    EventHandler<ActionEvent> imgBrightSortEventListener = j -> {
 
-        editRandomSortImg(view.getImage(), view);
+        int mode = 2;
+
+        editSortImg(view.getImage(), view, mode);
+
+    };
+
+    EventHandler<ActionEvent> imgSaturationSortEventListener = k -> {
+
+        int mode = 3;
+
+        editSortImg(view.getImage(), view, mode);
+
+    };
+
+    EventHandler<ActionEvent> imgHueSortEventListener = l -> {
+
+        int mode = 4;
+
+        editSortImg(view.getImage(), view, mode);
 
     };
 
