@@ -11,4 +11,4 @@ In order to run the Pixel Sorter Application:
 - Extract the .zip file;
 - If you don't have Java JDK installed on your windows, download a Java JDK and install it.
 - Java Runtime Environment is bundled with the .exe file, so you don't need to have that on your windows, 
-but if get any error trying to run the .exe maybe try installing a JRE aswell. [JRE version MUST BE above 1.7]
+but if you get any error trying to run the .exe maybe try installing a JRE aswell. [JRE version MUST BE above 1.7]
